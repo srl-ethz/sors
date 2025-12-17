@@ -1,0 +1,89 @@
+###############################################################################
+# Which object + trial/poke to run
+###############################################################################
+object: FoamDice        # Name of the object being poked
+trial: T1               # Trial identifier
+poke: P2                # Poke identifier (together with trial gives T1P2)
+mode: all               # "all" to run all simulations from objectConfigTPRanges,
+                        # "single" to run only the specified TRIAL+POKE
+
+###############################################################################
+# Frame ranges for each TRIAL+POKE combination (for mode "all")
+#   - These define which MoCap frames to simulate and match against.
+#   - You can add more objects or change windows here.
+###############################################################################
+objectConfigTPRanges:
+    T1P2: {initFrame: 32, lastFrame: 64}
+    T1P3: {initFrame: 65, lastFrame: 98}
+    T1P4: {initFrame: 99, lastFrame: 132}
+    T2P4: {initFrame: 88, lastFrame: 132}
+    T3P2: {initFrame: 20, lastFrame: 54}
+    T3P3: {initFrame: 55, lastFrame: 88}
+    T3P4: {initFrame: 89, lastFrame: 120}
+    T4P3: {initFrame: 56, lastFrame: 88}
+    T4P4: {initFrame: 89, lastFrame: 120}
+    T5P1: {initFrame: 5,  lastFrame: 40}
+
+###############################################################################
+# Global simulation + rendering config
+###############################################################################
+config:
+
+  # --- Visualization flags ---------------------------------------------------
+  visualize: true             # Write VTU files for ParaView
+  render: true                # Render any images at all
+  renderSim: true             # Render simulated mesh
+  renderSimSampling: false    # Render sampled surface points
+  renderData: true            # Render Kinect/Trimesh reconstructed mesh
+  renderRobotPos: false       # Render robot TCP positions
+  renderRobotDisk: true       # Render end-effector disk
+  storeData: true             # Write chamfer + disk data to CSV
+
+  # --- Sampling settings -----------------------------------------------------
+  samplingNumberSim: 10000    # #points sampled from simulated surface
+  samplingSeed: 42            # RNG seed for deterministic sampling
+
+  # --- Object physical properties -------------------------------------------
+  objectWeight: 0.14          # Total mass of the poked object in kg
+  frameRate: 30               # MoCap framerate → simulation dt = 1/fps
+  renderPrecision: 2          # PBRT samples per pixel (higher = slower)
+
+  # --- Contact / tool geometry ----------------------------------------------
+  toolOffset: 0.025           # Tool-tip offset from TCP (m)
+  toolOffsetPlot: 0.001       # Offset for rendering the disk
+  cylinderRadius: 0.02        # End-effector disk radius (meters)
+  fixingGround: 0.002         # Vertices with y < this are fixed to ground
+
+  # --- Material parameters (optimized parameters) ---------------------------
+  youngsModulus: 1345.6024023489897   # Elastic stiffness (Pa)
+  alpha: 169.99039484049894           # Mass damping coefficient
+  poissonsRatio: 0.017728278261516663 # ν parameter for Neo-Hookean model
+
+
+###############################################################################
+# File path templates
+# OBJECT, TRIAL, TRIALPOKE will be substituted
+###############################################################################
+paths:
+  # Where initial tet meshes are stored
+  initialMeshRoot: "cpp/demos/meshes/pokeflex{OBJECT}"
+  # Where reconstructed meshes + robot data JSON live
+  dataRoot:        "data/pokeflex"
+  # Top-level output folder for VTUs, images, and MP4
+  outputRoot:      "output"
+
+
+###############################################################################
+# SimulationSettings values
+###############################################################################
+sim:
+  description: "Demo of pokeflex object being poked with robotic arm."
+  verbose: true                     # Print solver info each step
+  numThreads: 4                     # Parallelization in Sim
+  meshType: Tetrahedron             # Type of mesh elements
+
+  # Time stepping and solver
+  CFLtimeSteppingFlag: false
+  timeSteppingScheme: "crank_nicolson"   # "crank_nicolson" or "backward_euler"
+  solverMethod: "minimize_SQP"           # Optimization-based solver
+  substeps: 1                            # Number of internal solver substeps per motion-capture frame

@@ -1,0 +1,28 @@
+project: SORS
+
+method: bayes
+metric:
+  name: maxHeight
+  goal: maximize
+run_cap: 10000
+
+parameters:
+  stepTime0:
+    distribution: uniform
+    min: 0.1
+    max: 0.9
+  
+  stepTime1:
+    distribution: uniform
+    min: 0.1
+    max: 0.9
+
+  endVal0:
+    distribution: uniform
+    min: 0.0
+    max: 2.0
+
+  startVal1:
+    distribution: uniform
+    min: 0.0
+    max: 2.0

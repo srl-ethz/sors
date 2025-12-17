@@ -1,0 +1,34 @@
+name: Build C++, test C++ unit tests, install Python conda environment, run Pytest.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Set up Python 3.12.2
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12.2'
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Install conda environment
+      run: |
+        conda update conda
+        conda env update --file python/environment.yml --name base
+    - name: Install C++ SRL Sim (including Pybind)
+      run: ./install.sh
+    - name: Run C++ unit tests
+      run: ./cpp/build/unit_test
+    - name: Test Python Examples with pytest
+      run: pytest -v python/

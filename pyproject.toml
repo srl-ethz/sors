@@ -1,0 +1,13 @@
+[build-system]
+requires = ["scikit-build-core"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+cmake.source-dir = "cpp"
+build-dir = "cpp/build"
+install.components = ["python_module"]
+
+[project]
+name = "sors"
+version = "0.1.0"
+readme = "README.md"

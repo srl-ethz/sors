@@ -1,0 +1,23 @@
+project: SORS
+
+method: bayes
+metric:
+  name: error_mean
+  goal: minimize
+run_cap: 10000
+
+parameters:
+  youngsModulus:
+    distribution: uniform
+    min: 100
+    max: 100000
+
+  alpha:
+    distribution: uniform
+    min: 1.0
+    max: 200.0
+
+  poissonsRatio:
+    distribution: uniform
+    min: 0.01
+    max: 0.45

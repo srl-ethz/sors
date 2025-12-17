@@ -1,0 +1,19 @@
+name: sors
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12.2
+  - libstdcxx-ng
+  - pip:
+    - meshio
+    - matplotlib
+    - tetgen
+    - pyvista
+    - pygmsh
+    - numpy
+    - pytest
+    - scikit-learn
+    - wandb
+    - pyyaml
+    - pandas
