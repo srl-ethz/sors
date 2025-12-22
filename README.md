@@ -1,7 +1,7 @@
 # SORS Simulation Framework
 
 This repository contains the simulation framework **SORS (Soft Over Rigid Simulator)**, referring to the paper:  
-SORS: A Modular, High-Fidelity Simulator for Soft Robots (Arxiv link)
+[**SORS: A Modular, High-Fidelity Simulator for Soft Robots**](http://arxiv.org/abs/2512.15994)
 
 <p align="center">
 <img src="asset/imgs/overviewS2R.png" alt="Overview" width="700px"/>
@@ -173,3 +173,15 @@ Refer to existing implementations (e.g. Neo-Hookean energy, PlaneContact) as min
 - Contact handling primarily supports rigid primitives (planes, disks); general mesh–mesh contact is limited.
 - No self-collision handling for soft bodies.
 - Meshes are assumed to be clean and well-conditioned (no automatic repair or remeshing).
+
+## Citation
+
+```bibtex
+@article{mekkattu2025sors,
+  author  = {Mekkattu, Manuel and Michelis, Mike Y. and Katzschmann, Robert K.},
+  title   = {SORS: A Modular, High-Fidelity Simulator for Soft Robots},
+  journal = {Under review},
+  year    = {2025},
+  url     = {https://arxiv.org/pdf/2512.15994}
+}
+```
