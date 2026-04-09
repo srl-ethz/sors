@@ -475,7 +475,7 @@ bool Energy<vertexDim, elementDim>::update_active_constraints(VectorXd& q) const
 
 
 template<int vertexDim, int elementDim>
-std::vector<VectorXd> Energy<vertexDim, elementDim>::compute_elementwise_energy (VectorXd& q, double dt, Params& actuation, std::vector<std::string>& VisualizationOption) const {
+std::vector<VectorXd> Energy<vertexDim, elementDim>::compute_elementwise_energy (VectorXd& q, double dt, Params& actuation, const std::vector<std::string>& VisualizationOption) const {
     UNUSED(dt);
     
     // Compute the energy of the system based on the current vertex positions q.
@@ -523,7 +523,7 @@ std::vector<VectorXd> Energy<vertexDim, elementDim>::compute_elementwise_energy 
                 elementEnergies[VisualCount](i) = this->elements_[i]->compute_energy(vertices, actuation);
                 if (externalForcesFlag_) {
                     for (int j = 0; j < elementDim; j++) {
-                        elementEnergies[VisualCount](i) += externalForceMatrix.row(ele(j)).dot(q.segment<3>(vertexDim * ele(j))-this->timeIntegrator_.get_qPrev().segment<3>(vertexDim * ele(j)));   
+                        elementEnergies[VisualCount](i) += externalForceMatrix.row(ele(j)).dot(q.template segment<3>(vertexDim * ele(j))-this->timeIntegrator_.get_qPrev().template segment<3>(vertexDim * ele(j)));
                     }
                 }
             } else {

@@ -44,7 +44,4 @@ private:
     const VectorXi surfaceGroups_;    
 };
 
-template class PressureForce<3, 4>;
-template class PressureForce<3, 8>;
-
 #endif

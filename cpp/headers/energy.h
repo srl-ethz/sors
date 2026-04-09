@@ -191,7 +191,7 @@ public:
     void update_state (VectorXd& q, double dt);
 
     // Compute elementwise energy for visualization (VisualizationOption is a list of energy names and/or "all" for total energy)
-    std::vector<VectorXd> compute_elementwise_energy (VectorXd& q, double dt, Params& actuation, std::vector<std::string>& VisualizationOption={"all"}) const; 
+    std::vector<VectorXd> compute_elementwise_energy (VectorXd& q, double dt, Params& actuation, const std::vector<std::string>& VisualizationOption={"all"}) const;
     // Compute velocity of the system based on the current vertex positions q and given time stepping scheme
     VectorXd compute_velocity (VectorXd& q, double dt) const;
     // Compute acceleration of the system based on the current vertex positions q and given time stepping scheme

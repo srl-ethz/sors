@@ -184,3 +184,6 @@ std::vector<Triplet<double>> PressureForce<vertexDim, elementDim>::compute_force
     }
     return forceDerivativeTriplets;
 }
+
+template class PressureForce<3, 4>;
+template class PressureForce<3, 8>;

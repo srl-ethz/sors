@@ -1,8 +1,20 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 project(sors)
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
+
+# macOS OpenMP support via Homebrew libomp
+if(APPLE)
+    execute_process(COMMAND brew --prefix libomp OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(HOMEBREW_LIBOMP_PREFIX)
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include")
+        set(OpenMP_C_LIB_NAMES "omp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY "${HOMEBREW_LIBOMP_PREFIX}/lib/libomp.dylib")
+    endif()
+endif()
 
 # Include external libraries
 include_directories(SYSTEM "../external/eigen")
@@ -17,15 +29,9 @@ include_directories("./headers/geometries")
 include_directories("./demos")
 
 # External libraries
-# PBRT, builds independently, skip installation step
-include(ExternalProject)
-ExternalProject_Add(pbrt 
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/pbrt-v3
-    BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../external/pbrt-v3/build
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR>
-    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --parallel 4
-    INSTALL_COMMAND ""
-)
+# PBRT is optional (only needed for rendering), skip on macOS due to compatibility issues
+# include(ExternalProject)
+# ExternalProject_Add(pbrt ...)
 
 # MshIO
 add_subdirectory(../external/MshIO MshIO)
