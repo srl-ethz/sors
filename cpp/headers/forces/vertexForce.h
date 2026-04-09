@@ -30,7 +30,4 @@ public:
     std::string get_force_name() const override {return "vertexForce";}
 };
 
-template class VertexForce<3, 4>;
-template class VertexForce<3, 8>;
-
 #endif

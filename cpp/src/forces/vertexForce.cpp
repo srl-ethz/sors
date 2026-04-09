@@ -7,3 +7,6 @@ VectorXd VertexForce<vertexDim, elementDim>::compute_force (const VectorXd& q, c
     // This is exactly the force vector that will be added to the gradient vector.
     return actuation;
 }
+
+template class VertexForce<3, 4>;
+template class VertexForce<3, 8>;

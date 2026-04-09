@@ -4,7 +4,7 @@ template <int vertexDim, int elementDim>
 SoftconMuscleEnergy<vertexDim, elementDim>::SoftconMuscleEnergy(
     int muscleGroup,
     double muscleStiffness, VectorXd muscleDirection,
-    std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices) : ElementEnergy<vertexDim, elementDim>(unitMatrices), muscleGroup_(muscleGroup), k_(muscleStiffness), m_(muscleDirection) {
+    std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices) : ElementEnergy<vertexDim, elementDim>(unitMatrices), muscleGroup_(muscleGroup), k_(muscleStiffness), m_(muscleDirection), F_(Matrix<double, vertexDim, vertexDim>::Zero()) {
         this->actuationFlag_ = true; // Softcon muscle energy has actuation flag set to true
     }
 
