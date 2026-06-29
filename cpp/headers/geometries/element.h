@@ -8,6 +8,7 @@
 #include "stableNeoHookean.h"
 #include "pseudostrain.h"
 #include "softconMuscle.h"
+#include "gravitational.h"
 
 /**
  * @class Element

@@ -97,6 +97,19 @@ public:
         }
     }
 
+    double get_dvdx (double dt) const {
+        if (this->timeSteppingScheme_ == "backward_euler") {
+            return 1 / dt;
+        }
+        else if (this->timeSteppingScheme_ == "crank_nicolson") {
+            return 2 / dt;
+        }
+        else {
+            std::cerr << bcolors.FAIL << "Unknown time stepping scheme: " << this->timeSteppingScheme_ << bcolors.ENDC << std::endl;
+            assert(false);
+        }
+    }
+
     // Setters and getters 
     void set_initial_deformation (MatrixXd& vertices) {qPrev_ = vertices.transpose().reshaped();}
     void set_initial_velocity (MatrixXd& velocities) {vPrev_ = velocities.transpose().reshaped();}

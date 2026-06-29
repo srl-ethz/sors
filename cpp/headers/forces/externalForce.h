@@ -24,6 +24,11 @@ public:
      */
     virtual VectorXd compute_force (const VectorXd& vertices, const VectorXd& actuation) const = 0;
 
+    virtual VectorXd compute_force (const VectorXd& vertices, const VectorXd& velocity, const VectorXd& actuation) const {
+        UNUSED(velocity);
+        return compute_force(vertices, actuation);
+    }
+
     /**
      * @brief Compute the Jacobian of the external force w.r.t. vertex positions (optional).
      *
@@ -38,6 +43,11 @@ public:
         UNUSED(q); UNUSED(actuation);
         std::vector<Triplet<double>> forceDerivativeTriplets; // Entries into the sparse hessian of shape [q.size(), q.size()]
         return forceDerivativeTriplets; // Not implemented yet, return empty vector
+    }
+
+    virtual std::vector<Triplet<double>> compute_force_gradient (const VectorXd& q, const VectorXd& velocity, const VectorXd& actuation, double dvdx) const {
+        UNUSED(velocity); UNUSED(dvdx);
+        return compute_force_gradient(q, actuation);
     }
 
     // Function that returns the type of force: "pressure", "vertexForce"

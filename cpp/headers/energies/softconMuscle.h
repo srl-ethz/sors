@@ -26,7 +26,8 @@ public:
         int muscleGroup,
         double muscleStiffness,
         VectorXd muscleDirection,
-        std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices);
+        std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices,
+        const std::vector<Matrix<double, vertexDim * vertexDim, vertexDim * elementDim>>& deformationHessians);
 
     // Compute softcon muscle energy
     double compute_energy(
@@ -60,8 +61,8 @@ private:
     const double k_;                               
     // Muscle fibre direction
     const Vector3d m_;                             
-    // Deformation gradient
-    const Matrix<double, vertexDim, vertexDim> F_; 
+    // Constant directed Hessian term used by the SoftCon model.
+    std::vector<Matrix<double, elementDim * vertexDim, elementDim * vertexDim>> directedDeformationHessian_;
 
     /**
      * @brief Class to manage time-varying muscle activation patterns.

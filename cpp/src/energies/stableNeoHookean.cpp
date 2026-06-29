@@ -9,8 +9,7 @@ StableNeoHookeanEnergy<vertexDim, elementDim>::StableNeoHookeanEnergy(
         youngsModulus_(youngsModulus), poissonsRatio_(poissonsRatio), 
         // Stable Neo-Hookean parameters reparameterizing the Lame Parameters
         mu_((4.0/3.0)*(youngsModulus / (2 * (1 + poissonsRatio)))),
-        // 5/6 mu = 5/6 * 3/4 mu_ = 5 / 8 mu_
-        lambda_(((youngsModulus * poissonsRatio) / ((1 + poissonsRatio) * (1 - 2 * poissonsRatio))) + ((5.0/8.0)*mu_)),
+        lambda_(((youngsModulus * poissonsRatio) / ((1 + poissonsRatio) * (1 - 2 * poissonsRatio))) + ((5.0/6.0)*mu_)),
         alpha_(1 + (3.0/4.0)*(mu_/lambda_)) {}
 
 

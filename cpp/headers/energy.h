@@ -19,6 +19,7 @@
 #include "externalForce.h"
 #include "pressureForce.h"
 #include "vertexForce.h"
+#include "hydroForce.h"
 
 /**
  * @class Energy

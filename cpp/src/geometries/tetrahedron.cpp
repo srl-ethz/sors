@@ -5,6 +5,7 @@
 Tetrahedron::Tetrahedron(
     Params parameterMap,
     const Matrix<double, TET_E_DIM, TET_V_DIM>& undeformedVertices,
+    const Vector<double, TET_V_DIM>& gravAcceleration,
     std::set<std::string> elementEnergiesStringSet
 ) : Element<TET_V_DIM, TET_E_DIM>(undeformedVertices, parameterMap.get_value("density")(0,0), compute_volume(undeformedVertices), NQUADPOINTS_TET) {
     // Calculate inverted reference shape matrix for deformation gradients (3x3 matrix)
@@ -57,7 +58,12 @@ Tetrahedron::Tetrahedron(
     elementEnergiesString_ = std::vector<std::string>(elementEnergiesStringSet.size());
     int energyIdx = 0;
     for (std::set<std::string>::iterator it = elementEnergiesStringSet.begin(); it != elementEnergiesStringSet.end(); ++it) {
-        if (*it == "neohookean") {
+        if (*it == "gravitational") {
+            double density = parameterMap.get_value("density")(0,0);
+            elementEnergies_[energyIdx] = std::make_unique<GravitationalEnergy<TET_V_DIM, TET_E_DIM>>(gravAcceleration, density, unitMatrices);
+            elementEnergiesString_[energyIdx] = *it;
+        }
+        else if (*it == "neohookean") {
             // Create an elementEnergy instance for neohookean elastic energy
             double youngsModulus = parameterMap.get_value("youngsModulus")(0,0);
             double poissonsRatio = parameterMap.get_value("poissonsRatio")(0,0);
@@ -84,7 +90,7 @@ Tetrahedron::Tetrahedron(
             int muscleGroup = parameterMap.get_value("muscleGroup")(0,0);
             double muscleStiffness = parameterMap.get_value("softconStiffness")(0,0);
             VectorXd muscleDirection = parameterMap.get_value("softconDirection").reshaped<RowMajor>();
-            elementEnergies_[energyIdx] = std::make_unique<SoftconMuscleEnergy<TET_V_DIM, TET_E_DIM>>(muscleGroup, muscleStiffness, muscleDirection, unitMatrices);
+            elementEnergies_[energyIdx] = std::make_unique<SoftconMuscleEnergy<TET_V_DIM, TET_E_DIM>>(muscleGroup, muscleStiffness, muscleDirection, unitMatrices, deformationHessians_);
             elementEnergiesString_[energyIdx] = *it;
         }
         else {

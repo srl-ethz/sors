@@ -19,7 +19,14 @@ Energy<vertexDim, elementDim>::Energy (
     this->numVertices_ = undeformedVertices.rows();
     this->neumannBCmask_ = VectorXi::Zero(vertexDim * numVertices_); 
     this->neumannBCvalue_ = VectorXd::Zero(vertexDim * numVertices_);
-    this->gravAcceleration_ = gravAcceleration;
+    bool elementGravityFlag = false;
+    for (const auto& elementEnergies : elementEnergiesList) {
+        if (elementEnergies.find("gravitational") != elementEnergies.end()) {
+            elementGravityFlag = true;
+            break;
+        }
+    }
+    this->gravAcceleration_ = elementGravityFlag ? Vector<double, vertexDim>::Zero() : gravAcceleration;
     this->dampingAlpha_ = dampingAlpha;
 
     // Element energies
@@ -35,7 +42,7 @@ Energy<vertexDim, elementDim>::Energy (
         }
     }
     for (unsigned int i = 0; i < forceTypesList.size(); i++) {
-        if (forceTypesList[i] == "pressure") {
+        if (forceTypesList[i] == "pressure" || forceTypesList[i] == "hydro") {
             surfaceExtractionNeeded = true;
         }
     }
@@ -140,10 +147,10 @@ Energy<vertexDim, elementDim>::Energy (
         }
         // Create the element after checking what type of element: Tet or Hex
         if constexpr (vertexDim == 3 && elementDim == 4) {
-            this->elements_[i] = std::make_unique<Tetrahedron>(elementParameterList[i], vertices, elementEnergiesList[i]);
+            this->elements_[i] = std::make_unique<Tetrahedron>(elementParameterList[i], vertices, gravAcceleration, elementEnergiesList[i]);
         }
         else if constexpr (vertexDim == 3 && elementDim == 8) {
-            this->elements_[i] = std::make_unique<Hexahedron>(elementParameterList[i], vertices, elementEnergiesList[i]);
+            this->elements_[i] = std::make_unique<Hexahedron>(elementParameterList[i], vertices, gravAcceleration, elementEnergiesList[i]);
         }
         else {
             // Not yet implemented
@@ -166,6 +173,15 @@ Energy<vertexDim, elementDim>::Energy (
         }
         else if (forceTypesList_[i] == "vertexForce") {
             externalForces_[i] = std::make_unique<VertexForce<vertexDim, elementDim>>();
+        }
+        else if (forceTypesList_[i] == "hydro") {
+            MatrixXi surfaceVertexIdx = forceParameterList.get_value("surfaceVertexIdx").cast<int>();
+            double fluidDensity = forceParameterList.get_value("fluidDensity").reshaped<RowMajor>()(0);
+            double cD = forceParameterList.get_value("cD").reshaped<RowMajor>()(0);
+            double cT = forceParameterList.get_value("cT").reshaped<RowMajor>()(0);
+
+            externalForces_[i] = std::make_unique<HydroForce<vertexDim, elementDim>>(
+                surfaceVertexIdx, fluidDensity, cD, cT);
         }
         else {
             std::cout << bcolors.FAIL << "Unknown force type: " << forceTypesList_[i] << bcolors.ENDC << std::endl;
@@ -228,6 +244,7 @@ double Energy<vertexDim, elementDim>::compute_energy (VectorXd& q, double dt, Pa
     // Compute energy contributions for each vertex individually due to external vertex forces
     if (externalForcesFlag_) {
         // Compute total external forces
+        VectorXd v = dt == 0.0 ? VectorXd::Zero(q.size()) : this->timeIntegrator_.compute_velocity(q, dt);
         VectorXd externalForces = VectorXd::Zero(numVertices_ * vertexDim);
         for (std::size_t i = 0; i < this->externalForces_.size(); i++) {
             VectorXd act;
@@ -237,7 +254,7 @@ double Energy<vertexDim, elementDim>::compute_energy (VectorXd& q, double dt, Pa
             else {
                 act = VectorXd::Zero(0); // Default actuation if not specified
             }
-            VectorXd externalForce = this->externalForces_[i]->compute_force(q, act);
+            VectorXd externalForce = this->externalForces_[i]->compute_force(q, v, act);
             externalForces += externalForce;
         }
         energy += externalForces.dot(q-this->timeIntegrator_.get_qPrev()); // Work done by external forces
@@ -280,6 +297,7 @@ VectorXd Energy<vertexDim, elementDim>::compute_gradient (VectorXd& q, double dt
     }
 
     // Add external forces to the gradient
+    VectorXd v = dt == 0.0 ? VectorXd::Zero(q.size()) : this->timeIntegrator_.compute_velocity(q, dt);
     for (std::size_t i = 0; i < this->externalForces_.size(); i++) {
         VectorXd act;
         if (this->externalForces_[i]->actuationFlag_) {
@@ -288,7 +306,7 @@ VectorXd Energy<vertexDim, elementDim>::compute_gradient (VectorXd& q, double dt
         else {
             act = VectorXd::Zero(0); // Default actuation if not specified
         }
-        VectorXd externalForce = this->externalForces_[i]->compute_force(q, act);
+        VectorXd externalForce = this->externalForces_[i]->compute_force(q, v, act);
         gradient -= externalForce;
     }
 
@@ -359,7 +377,9 @@ SparseMatrix<double> Energy<vertexDim, elementDim>::compute_hessian (VectorXd& q
             act = VectorXd::Zero(0); // Default actuation if not specified
         }
 
-        std::vector<Triplet<double>> externalForceGradient = this->externalForces_[i]->compute_force_gradient(q, act);
+        const VectorXd v = dt == 0.0 ? VectorXd::Zero(q.size()) : this->timeIntegrator_.compute_velocity(q, dt);
+        const double dvdx = dt == 0.0 ? 0.0 : this->timeIntegrator_.get_dvdx(dt);
+        std::vector<Triplet<double>> externalForceGradient = this->externalForces_[i]->compute_force_gradient(q, v, act, dvdx);
 
         // Reserve new space in tripletList and append entries
         std::size_t prevSize = tripletList.size();
@@ -499,7 +519,8 @@ std::vector<VectorXd> Energy<vertexDim, elementDim>::compute_elementwise_energy 
             else {
                 act = VectorXd::Zero(0); // Default actuation if not specified
             }
-            VectorXd externalForce = this->externalForces_[i]->compute_force(q, act);
+            VectorXd v = dt == 0.0 ? VectorXd::Zero(q.size()) : this->timeIntegrator_.compute_velocity(q, dt);
+            VectorXd externalForce = this->externalForces_[i]->compute_force(q, v, act);
             externalForces += externalForce;
         }
         externalForceMatrix = externalForces.reshaped<RowMajor>(numVertices_, vertexDim);

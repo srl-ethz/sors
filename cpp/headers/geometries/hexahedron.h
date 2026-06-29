@@ -27,8 +27,15 @@ public:
     Hexahedron(
         Params parameterMap,
         const Matrix<double, HEX_E_DIM, HEX_V_DIM>& undeformedVertices,
+        const Vector<double, HEX_V_DIM>& gravAcceleration,
         std::set<std::string> elementEnergiesStringSet
     );
+
+    Hexahedron(
+        Params parameterMap,
+        const Matrix<double, HEX_E_DIM, HEX_V_DIM>& undeformedVertices,
+        std::set<std::string> elementEnergiesStringSet
+    ) : Hexahedron(parameterMap, undeformedVertices, Vector<double, HEX_V_DIM>::Zero(), elementEnergiesStringSet) {}
 
     // Computes gradient of the energy function with respect to vertices
     Vector<double, HEX_EV_DIM> compute_gradient(

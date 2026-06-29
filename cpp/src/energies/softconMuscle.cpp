@@ -4,8 +4,23 @@ template <int vertexDim, int elementDim>
 SoftconMuscleEnergy<vertexDim, elementDim>::SoftconMuscleEnergy(
     int muscleGroup,
     double muscleStiffness, VectorXd muscleDirection,
-    std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices) : ElementEnergy<vertexDim, elementDim>(unitMatrices), muscleGroup_(muscleGroup), k_(muscleStiffness), m_(muscleDirection) {
+    std::array<Matrix<double, vertexDim, vertexDim>, 9>& unitMatrices,
+    const std::vector<Matrix<double, vertexDim * vertexDim, vertexDim * elementDim>>& deformationHessians)
+    : ElementEnergy<vertexDim, elementDim>(unitMatrices), muscleGroup_(muscleGroup), k_(muscleStiffness), m_(muscleDirection) {
         this->actuationFlag_ = true; // Softcon muscle energy has actuation flag set to true
+
+        for (size_t s = 0; s < deformationHessians.size(); ++s) {
+            directedDeformationHessian_.push_back(Matrix<double, elementDim * vertexDim, elementDim * vertexDim>::Zero());
+            const Matrix<double, vertexDim * vertexDim, vertexDim * elementDim>& nablaF = deformationHessians[s];
+
+            for (int i = 0; i < vertexDim * elementDim; ++i) {
+                for (int j = 0; j < vertexDim * elementDim; ++j) {
+                    Vector<double, vertexDim> nablaFi_m = nablaF.col(i).reshaped(vertexDim, vertexDim).transpose() * m_;
+                    Vector<double, vertexDim> nablaFj_m = nablaF.col(j).reshaped(vertexDim, vertexDim).transpose() * m_;
+                    directedDeformationHessian_[s](i, j) = nablaFi_m.dot(nablaFj_m);
+                }
+            }
+        }
     }
 
 template <int vertexDim, int elementDim>
@@ -112,19 +127,9 @@ Matrix<double, elementDim * vertexDim, elementDim * vertexDim> SoftconMuscleEner
             }
         }
 
-        Vector<double, vertexDim * elementDim> preBigTermTwo = Vector<double, vertexDim * elementDim>::Zero();
-        // nablaF_aci * m_c
-        for (int a = 0; a < vertexDim; ++a) {
-            for (int c = 0; c < vertexDim; ++c) {
-                for (int i = 0; i < vertexDim * elementDim; ++i) {
-                    int ac = a * vertexDim + c;
-                    preBigTermTwo(i) += nablaF(ac, i) * m_(c);
-                }
-            }
-        }
         // Getting the outer products
         Matrix<double, vertexDim * elementDim, vertexDim * elementDim> bigTermOne = (r / (l * l)) * preBigTermOne * preBigTermOne.transpose();
-        Matrix<double, vertexDim * elementDim, vertexDim * elementDim> bigTermTwo = (1 - r) * preBigTermTwo * preBigTermTwo.transpose();
+        Matrix<double, vertexDim * elementDim, vertexDim * elementDim> bigTermTwo = (1 - r) * directedDeformationHessian_[s];
 
         energyHessian +=  k_ * (bigTermOne + bigTermTwo) * quadratureWeights;
     }

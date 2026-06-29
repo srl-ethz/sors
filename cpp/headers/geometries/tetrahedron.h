@@ -28,8 +28,15 @@ public:
     Tetrahedron( 
         Params parameterMap,
         const Matrix<double, TET_E_DIM, TET_V_DIM>& undeformedVertices,
+        const Vector<double, TET_V_DIM>& gravAcceleration,
         std::set<std::string> elementEnergiesStringSet
     );
+
+    Tetrahedron( 
+        Params parameterMap,
+        const Matrix<double, TET_E_DIM, TET_V_DIM>& undeformedVertices,
+        std::set<std::string> elementEnergiesStringSet
+    ) : Tetrahedron(parameterMap, undeformedVertices, Vector<double, TET_V_DIM>::Zero(), elementEnergiesStringSet) {}
 
     // Computes gradient of the energy function with respect to vertices
     Vector<double, TET_EV_DIM> compute_gradient(
